@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 namespace BookBorrowSys
 {
     public delegate void HandleBookSysEvent();
+   
     class Program
     {
         static void Main(string[] args)
@@ -51,7 +53,8 @@ namespace BookBorrowSys
     }
     class BookSystemManager
     {
-       
+        public string bookLibPath = @"c:\Mike\bookLib";
+        public string bookLibName = "booklibrary.txt";
         public event HandleBookSysEvent bookSysEvent;
         private void cleanBooksysEvent()
         {
@@ -89,19 +92,53 @@ namespace BookBorrowSys
             Console.WriteLine("****************welocom to Mike book borrow system************************");
             Console.WriteLine("press 1 2 3 to chose the function you want");
             Console.WriteLine("1.Browser library books");
-            Console.WriteLine("2.Serach your book");
-            Console.WriteLine("3.Beturn book");
+           // Console.WriteLine("2.Serach your book");
+            Console.WriteLine("3.Return book");
             Console.WriteLine("4.Book manager system");
             Console.WriteLine("5.Exit");
-            BookManagerImp.createBookLibrary(@"c:\Mike\bookLib","booklibrary.txt",null);
-            String inputNumber = Console.ReadLine();
+            string[] books = { "1.C# Learning", "2.Advanced C#", "3.To Be a Better Man", "4. How to write Testament" };
+
+            string pathString = Path.Combine(bookLibPath, bookLibName);
+            BookManagerImp.createBookLibrary(bookLibPath, bookLibName, books);
+            string inputNumber = Console.ReadLine();
             int num = CheckInput.checkInputIsNum(inputNumber);
             switch (num)
             {
                 case 1:
                     claerScreen();
-                    Console.WriteLine("List all of the book of library");
-                    Array booklist = BookManagerImp.findAllBookInFile();
+                    Console.WriteLine("List all of the book of library input the number to chose which book you want to borrow");
+                    string[] booklist = BookManagerImp.findAllBookInFile(bookLibPath,bookLibName);
+                    foreach (string book in booklist)
+                    {
+                        Console.WriteLine(book);
+                    }
+
+                    //Console.WriteLine("0.Serach your book");
+                    Console.WriteLine("input space to return to the main menu");
+
+                    string inputNumberInBrowserBook = Console.ReadLine();
+                    foreach (string book in booklist)
+                    {
+
+                        Console.WriteLine("searching book"+ book[0]);
+                        if (book[0].Equals(inputNumberInBrowserBook.Trim().ToCharArray()[0])&& inputNumberInBrowserBook.Trim().ToCharArray().Length==1)
+                        {
+                           
+                            Console.WriteLine("you borrowed the book " + book );
+                            int index = Convert.ToInt32(Char.GetNumericValue(book[0]));
+                            booklist[index - 1] = "this book is gone";
+                            updateBookLib(pathString, booklist);
+                            break;
+                        }
+                        else if(booklist.Length< Int32.Parse(inputNumberInBrowserBook))
+                        {
+                            Console.WriteLine("there is no that book you want"+ book[0]);
+                        }
+
+                    }
+                    Console.WriteLine("press any key to the menu");
+                    string input = Console.ReadLine();
+                    start();
                     break;
                 case 2:
                     break;
@@ -120,9 +157,18 @@ namespace BookBorrowSys
             Console.ReadLine();
         }
 
+        public void borrowBook(int functionNum)
+        {
+           
+        }
         public void controlSys()
         {
 
+        }
+
+        public void updateBookLib(string pathString,string[] books)
+        {
+            File.WriteAllLines(pathString, books);
         }
 
         public void exitSys()
@@ -172,11 +218,13 @@ namespace BookBorrowSys
             throw new NotImplementedException();
         }
 
-        public static Array findAllBookInFile()
+        public static string[] findAllBookInFile(String path,String fileName)
         {
-            return null;
+            String pathString = System.IO.Path.Combine(path, fileName);
+            string [] mybooks =  File.ReadAllLines(pathString);
+            return mybooks;
         }
-        public static void createBookLibrary(String path,String fileName,Array books)
+        public static void createBookLibrary(String path,String fileName,string[] books)
         {
 
             if (!System.IO.Directory.Exists(path))
@@ -190,13 +238,15 @@ namespace BookBorrowSys
             String pathString = System.IO.Path.Combine(path, fileName);
             if (!System.IO.File.Exists(pathString))
             {
-                using (System.IO.FileStream fs = System.IO.File.Create(pathString))
+                using (System.IO.File.Create(pathString))
                 {
                     //Write file
+                    File.WriteAllLines(pathString, books);
                 }
             }
             else
             {
+                //File.WriteAllLines(pathString, books);
                 Console.WriteLine("File "+fileName+" is already exists");
             }
         }
